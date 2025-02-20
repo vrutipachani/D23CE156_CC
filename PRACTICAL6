@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+typedef struct {
+    char* str;
+    int pos;
+} ParserState;
+
+bool parse_expression(ParserState* state);
+bool parse_list(ParserState* state);
+bool parse_list_prime(ParserState* state);
+
+void initialize_parser(ParserState* state, char* input_str) {
+    state->str = input_str;
+    state->pos = 0;
+}
+
+char* validate_parser(ParserState* state) {
+    if (parse_expression(state)) {
+        if (state->pos == strlen(state->str)) {
+            return "Valid string";
+        } else {
+            return "Invalid string";
+        }
+    } else {
+        return "Invalid string";
+    }
+}
+
+bool parse_expression(ParserState* state) {
+    if (state->pos < strlen(state->str) && state->str[state->pos] == '(') {
+        state->pos++;
+        if (parse_list(state)) {
+            if (state->pos < strlen(state->str) && state->str[state->pos] == ')') {
+                state->pos++;
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else if (state->pos < strlen(state->str) && state->str[state->pos] == 'a') {
+        state->pos++;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool parse_list(ParserState* state) {
+    if (parse_expression(state)) {
+        if (parse_list_prime(state)) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+bool parse_list_prime(ParserState* state) {
+    if (state->pos < strlen(state->str) && state->str[state->pos] == ',') {
+        state->pos++;
+        if (parse_expression(state)) {
+            if (parse_list_prime(state)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return true;  // epsilon case
+    }
+}
+
+int main() {
+    char* test_cases[] = {
+        "a",
+        "(a)",
+        "(a,a)",
+        "(a,(a,a),a)",
+        "(a,a),(a,a)",
+        "a)",
+        "(a a,a a, (a,a),a)"
+    };
+    int num_test_cases = sizeof(test_cases) / sizeof(test_cases[0]);
+
+    for (int i = 0; i < num_test_cases; i++) {
+        ParserState parser;
+        initialize_parser(&parser, test_cases[i]);
+        char* result = validate_parser(&parser);
+        printf("Input: %s, Output: %s\n", test_cases[i], result);
+    }
+
+    return 0;
+}
